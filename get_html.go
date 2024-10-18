@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,19 +8,26 @@ import (
 )
 
 func getHTML(rawURL string) (string, error) {
-	resp, err := http.Get(rawURL)
+	res, err := http.Get(rawURL)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("got Network error: %v", err)
 	}
-	if resp.StatusCode > 399 {
-		return "", fmt.Errorf("error fetching html, error code: %d", resp.StatusCode)
+	defer res.Body.Close()
+
+	if res.StatusCode > 399 {
+		return "", fmt.Errorf("got HTTP error: %s", res.Status)
 	}
-	if !strings.Contains(resp.Header.Get("Content-Type"), "text/html") {
-		return "", errors.New("content-type is not html")
+
+	contentType := res.Header.Get("Content-Type")
+	if !strings.Contains(contentType, "text/html") {
+		return "", fmt.Errorf("got non-HTML response: %s", contentType)
 	}
-	body, err := io.ReadAll(resp.Body)
+
+	htmlBodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("couldn't read response body: %v", err)
 	}
-	return string(body), nil
+
+	htmlBody := string(htmlBodyBytes)
+	return htmlBody, nil
 }
