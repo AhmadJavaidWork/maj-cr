@@ -14,11 +14,15 @@ func main() {
 		fmt.Println("too many arguments provided")
 		os.Exit(1)
 	}
-	fmt.Printf("starting crawl of: %s\n", os.Args[1])
-	html, err := getHTML(os.Args[1])
-	if err != nil {
-		fmt.Printf("error fetching html: %s\n", err.Error())
-		os.Exit(1)
+	rawBaseURL := os.Args[1]
+
+	fmt.Printf("starting crawl of: %s...\n", rawBaseURL)
+
+	pages := make(map[string]int)
+
+	crawlPage(rawBaseURL, rawBaseURL, pages)
+
+	for normalizedURL, count := range pages {
+		fmt.Printf("%d - %s\n", count, normalizedURL)
 	}
-	fmt.Println(html)
 }
